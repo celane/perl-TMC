@@ -57,7 +57,7 @@ install programs/*.1 $RPM_BUILD_ROOT/%{_mandir}/man1/
 
 %files
 %defattr(-,root,root,-)
-%doc Changes META.json README
+%doc Changes README.md
 %{perl_vendorlib}/*
 %{_mandir}/man3/*
 %{_mandir}/man1/*
