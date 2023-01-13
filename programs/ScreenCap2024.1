@@ -1,0 +1,54 @@
+.\" This is a comment
+.\" Contact Chuck Lane lane@duphy4.physics.drexel.edu
+.TH ScreenCap2024 1  "USBTMC DAQ"
+.SH NAME
+ScreenCap2024 \- fetch configuration from instrument
+.SH SYNOPSIS
+.B ScreenCap2024
+[OPTION]... [>imagefile]
+
+.SH DESCRIPTION
+This program is used to get a screen-capture from a Tektronix
+2024B oscilloscope. It might work for other Tektronix products,
+but might not.  There is a choice of graphics formats, which
+is determined by the scope capabilities.
+.PP
+Please note that there is a long delay built into this program,
+between sending the commands to generate the screen capture, and
+the attempt to read the screen capture. This is to work around
+device-driver timeouts, caused by the scope taking longer to
+respond than the hardwired driver timeout. 
+.PP
+The device is (optionally) selected by manufacturer, product name,
+and serial number, defaulting to a Tektronix TDS2024B. These
+options use  simple shell-style 'glob' wildcards, so \"Tek*\" will
+match \"Tektronix\". 
+
+.SH OPTIONS
+.TP
+.B -h     --help
+show short usage message
+.TP
+.BI  "-o" "file" "    --out=" "file"
+output file, if not supplied, output goes to STDOUT
+.TP
+.BI "-m" "MFR" "    --manufacter=" "MFR"
+manufacturer name
+.I MFR
+(Default: \"Tek*\")
+.TP
+.BI "-p" "PROD" "    --product=" "PROD"
+device product name
+.I PROD
+(Default: \"TDS*2024*\")
+.TP
+.BI "-s" "SN" "    --serial=" "SN"
+device serial number
+.I SN
+(Default: \"*\")
+.SH SEE ALSO
+TMC(3pm)
+.SH BUGS
+Copious, yet undiscovered. 
+.SH AUTHOR
+Chuck Lane (lane@duphy4.physics.drexel.edu)

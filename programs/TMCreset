@@ -1,0 +1,59 @@
+#!/usr/bin/perl -w
+use 5.006;
+use strict;
+use warnings FATAL => 'all';
+no strict qw(subs);
+use Fcntl qw(O_RDWR);
+use FileHandle;
+use Carp;
+
+# find the TMC devices on the system, and do a usb reset on them
+# clears usbtmc timeout hangs
+
+BEGIN {
+    require 'linux/ioctl.ph';
+    require 'linux/usbdevice_fs.ph';
+}
+
+
+
+my (@usbs);
+my $BASE = '/dev/bus/usb';
+
+open(X,"lsusb -v 2>/dev/null|") || croak("unable to pipe from lsusb");
+my ($bus,$dev);
+while (<X>) {
+    chomp;
+    if (/^Bus\s+([a-f\d]+)\s+Device\s+([a-f\d]+)\s*:/i) {
+	$bus = $1;
+	$dev = $2;
+    } elsif (/^\s+bInterfaceProtocol\s+\d+\s+TMC\s*$/) {
+	push(@usbs,"$BASE/$bus/$dev");
+    }
+}
+close(X);
+
+    
+my $io = new FileHandle;
+my $status = 0;
+
+foreach my $u (@usbs) {
+    print "Attempt reset of $u...\n";
+    
+    if (!sysopen($io,$u,O_WRONLY)) { 
+	carp("error opening $u for writing $!");
+	$status = 1;
+	next;
+    }
+   
+    my $iss = ioctl($io,&USBDEVFS_RESET,0);
+    if (!$iss) {
+	carp("error resetting $u iss=$iss $!");
+	$status = 1;
+	next;
+    }
+    close($io);
+}
+
+exit($status);
+

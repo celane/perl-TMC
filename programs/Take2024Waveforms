@@ -1,0 +1,236 @@
+#!/usr/bin/perl -w 
+# 
+use Getopt::Long qw(:config bundling auto_version);
+use Time::HiRes qw ( sleep gettimeofday );
+use strict;
+use TMC;
+
+
+our $DEBUG = 0;
+our $VERSION = '1.1';
+our $VERBOSE = 1;
+our $TMC;
+our $OUT;
+our $TSTART;
+our $SHUTDOWN = 0;
+
+sub stopreq 
+{
+    $SHUTDOWN = 1;
+    alarm(30);
+}
+
+sub muststop 
+{
+    die("timeout after shutdown requested");
+}
+
+$SIG{TERM} = \&stopreq;
+$SIG{INT} = \&stopreq;
+$SIG{ALRM} = \&muststop;
+
+
+
+main();
+
+
+sub main 
+{   
+    my $id;
+    my $nev = 0;
+    my $chans;
+    my (@acqch);
+    my $help;
+    my $outfile;
+    my $quiet = 0;
+    my $selfdelay;
+    my $force = 0;
+    
+    my $mfr = 'Tek*';
+    my $prod ='TDS*2024*';
+    my $sn = '*';
+
+    
+    GetOptions(
+	'debug|d+' => \$DEBUG,
+	'help|h|?' => \$help,
+	'id|i=s' => \$id,
+	'nevents|n=s' => \$nev,
+	'channels|C=s' => \$chans,
+	'self|s=s' => \$selfdelay,
+	'quiet|q' => \$quiet,
+	
+        'manufacture|M=s' => \$mfr,
+        'product|P=s' => \$prod,
+        'serial|S=s' => \$sn,
+	
+	'out|o=s' => \$outfile,
+	'force|f' => \$force,
+	);
+
+    if (defined($help)) {
+	usage();
+	exit(0);
+    }
+    $VERBOSE = !$quiet;
+
+    if (defined($outfile)) {
+	if (-e $outfile && !$force) {
+	    die("output file exists! use --force to overwrite");
+	}
+	open($OUT,">$outfile") || die("unable to open $outfile for writing");
+    } else {
+	$OUT = \*STDOUT;
+	$VERBOSE = 0;
+    }
+
+
+    if ($nev <= 0 && $VERBOSE) {
+	print "Infinite running, use Control-C or 'kill $$' to stop\n";
+    }
+
+    $TMC = new TMC(
+        MANUFACTURE=>$mfr,
+        PRODUCT=>$prod,
+        SERIAL=>$sn,
+	);
+    $TSTART = gettimeofday();
+    print $OUT ">REM ID:$id\n" if defined($id);
+    print $OUT ">REM FORCED TRIGGER  Delay=$selfdelay\n" if defined($selfdelay);
+    print $OUT ">REM START: $TSTART = ",scalar(localtime($TSTART)),"\n";
+    
+    print "Setting up for acquisition..." if $VERBOSE;
+    if (defined($chans)) {
+	my (@l) = split(/,/,$chans);
+	my (%hch);
+	foreach (@l) {
+	    if (/ch([1-4])/i) {
+		$hch{"CH$1"} = 1;
+	    } elsif (/math/i) {
+		$hch{"MATH"} = 1;
+	    } elsif (/REF([a-d])/i) {
+		$hch{"REF$1"} = 1;
+	    }
+	}
+	@acqch = (sort(keys(%hch)));
+    } else {
+	Txx('SELECT?');
+	sleep(0.01);
+	$chans = Rxx();
+	chomp($chans);
+	my (@l) = split(/;/,$chans);
+	push(@acqch,'CH1') if $l[0];
+	push(@acqch,'CH2') if $l[1];
+	push(@acqch,'CH3') if $l[2];
+	push(@acqch,'CH4') if $l[3];
+	push(@acqch,'MATH') if $l[4];
+	push(@acqch,'REFA') if $l[5];
+	push(@acqch,'REFB') if $l[6];
+	push(@acqch,'REFC') if $l[7];
+	push(@acqch,'REFD') if $l[8];
+    }
+
+    Txx("SET?");
+    sleep(0.1);
+    Rxx();
+    Txx("ACQUIRE:STOPAFTER?");
+    my $acq_stopafter = Rxx();
+    Txx("ACQUIRE:STATE?");
+    my $acq_state = Rxx();
+
+    Txx("DATA:ENCDG ASCII");
+    Txx("ACQUIRE:STATE STOP");
+    Txx("ACQUIRE:STOPAFTER SEQUENCE");
+    print "...ready to go!\n" if $VERBOSE;
+    
+    my $event = 0;
+    my $b;
+    my $c;
+    $| = 1;
+    print "START @ t=$TSTART ",scalar(localtime($TSTART)),"\n" 
+	if $VERBOSE;
+    while (($nev<=0 || $event != $nev) && !$SHUTDOWN) {
+	$event++;
+	Txx("ACQUIRE:STATE RUN");
+	print "    Ready...   " if $VERBOSE;
+	sleep($selfdelay) if defined($selfdelay);
+	Txx("TRIGGER FORCE") if defined($selfdelay);
+	while (!$SHUTDOWN) {
+	    $TMC->Tx('BUSY?');
+	    $b = $TMC->Rx();
+	    last if $b =~ /0/;
+            sleep(0.05);
+        }
+	my $tev = gettimeofday();
+	print $OUT ">REM EV=$event; Dt=",$tev-$TSTART,"; t=$tev\n";
+	print "Event $event \@ ",scalar(localtime($tev)), " ..reading" 
+	    if $VERBOSE;
+	
+	foreach $c (@acqch) {
+	    Txx("DATA:SOURCE $c");
+	    Txx("WAVFRM?");
+	    sleep(0.01);
+	    Rxx();
+	}
+	print "\n" if $VERBOSE;
+    }
+
+    # cleanup
+    Txx("ACQUIRE:STOPAFTER ".$acq_stopafter);
+    Txx("ACQUIRE:STATE ".$acq_state);
+
+    my $TEND = gettimeofday();
+    print $OUT ">REM STOP Dt=",$TEND-$TSTART,"; t=$TEND; ",
+    scalar(localtime($TEND)),"\n";
+    print "STOP @ t=$TEND ",scalar(localtime($TEND)),"\n" 
+	if $VERBOSE;
+    print "    $event Events in ",$TEND-$TSTART," seconds\n"
+	if $VERBOSE;
+    close($OUT) if defined($outfile);
+}
+
+sub Txx 
+{
+    my $s = shift;
+    chomp($s);
+    print $OUT ">$s\n";
+    $TMC->Tx($s);
+}
+
+sub Rxx
+{
+    my $s;
+    $s = $TMC->Rx();
+    chomp($s);
+    $s .= "\n";
+    print $OUT "<$s";
+    return $s;
+}
+
+
+sub usage 
+{
+    print "Take 2024B events, send to file or STDOUT\n";
+    print "$0: [options]\n";
+    print "    -h     --help          this message\n";
+    print "    -q     --quiet         no informative chatter output\n";
+    print "    -d     --debug         increment debug level\n";
+    print "    -sD    --self=D        force self trigger, delay=D secs\n";
+    print "    -i     --id            id/comment string\n";
+    print "    -n     --nevents       number of events to take [Def: 0=infinity]\n";
+    print "    -cLST  --channels=LST  channels to read [whatever displayed]\n";
+    print "                              LST is comma sep: Ex: Ch1,Ch3\n"; 
+    print "    -ofile --out=file      output data file (Def:stdout)\n";
+    print "    -f     --force         force overwrite of output file\n";
+    print "     these can use simple 'glob' style wildcards:\n";
+    print "    -MMM --manufacture=MM manufacturer name (def: Tek*)\n";
+    print "    -PNM --product=NM  device product name (def: TDS*2024*)\n";
+    print "    -SSN --serial=SN   device serial number (def: *)\n";
+
+}
+
+
+    
+
+
+

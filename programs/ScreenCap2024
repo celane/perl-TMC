@@ -1,0 +1,82 @@
+#!/usr/bin/perl -w
+# 
+use TMC;
+use Getopt::Long qw(:config bundling auto_version);
+use Time::HiRes qw(sleep);
+use strict;
+
+
+
+main();
+
+sub main
+{
+    my $help;
+    my $mfr = 'Tek*';
+    my $prod ='TDS*2024*';
+    my $sn = '*';
+
+    my $format = 'BMP';
+    my $outfile;
+    
+    GetOptions(
+	'product|p=s' => \$prod,
+	'manufacture|m=s' => \$mfr,
+	'serial|s=s'  => \$sn,
+	'format|f=s' => \$format,
+        'output|o=s' => \$outfile,
+	'help|h|?' => \$help,
+	);
+
+    if (defined($help)) {
+	print "usage: $0  [options] [outfile]\n";
+	print "   -h   --help       print this help\n";
+	print "   -fFM --format=FM  set output format (def:BMP)\n";
+	print "                        FM = (BMP|EPS|JPG|PCX|TIF)\n";
+
+	print "     these can use simple 'glob' style wildcards:\n";
+        print "    -mMM --manufacture=MM  manufacturer name (def: Tek*)\n";
+	print "    -pP --product=P        select product P (def:TDS*2024*)\n";
+	print "    -sS --serial=S         select serial \# S (def: *)\n";
+        print "    -oFile --output=File   output to file\n";
+	print " graphic output written to 'outfile' or STDOUT\n";
+	exit(0);
+    }
+
+    $format = uc($format);
+    $format =~ s/^\s*//;
+    $format =~ s/\s*$//;
+    if ($format !~ /^(B|E|J|P|T)/i) {
+	die("invalid format");
+    }
+    $format = 'EPSIMAGE' if $format =~ /^E/i;
+    $format = 'TIFF' if  $format =~ /^T/i;
+    $format = 'JPEG' if $format =~ /^J/i;
+    $format = 'BMP' if $format =~ /^B/i;
+    $format = 'PCX' if $format =~ /^P/i;
+    
+    $outfile = shift(@ARGV) unless defined $outfile;
+    if (defined($outfile)) {
+	open(OUT,">$outfile") || die("unable to open $outfile for writing");
+    } else {
+	*OUT = *STDOUT;
+    }
+
+    my $t = new TMC(
+        MANUFACTURE=>$mfr,
+        PRODUCT=>$prod,
+        SERIAL=>$sn,
+	);
+    $t->Tx("HEADER OFF");
+    $t->Tx("HARDCOPY:FORMAT $format");
+    $t->Tx("HARDCOPY:LAYOUT PORTRAIT");
+    $t->Tx("HARDCOPY:PORT USB");
+    $t->Tx("HARDCOPY START");
+    sleep(10);  # takes a LONG time...
+
+
+    print OUT $t->Rx();
+    exit(0);
+}
+
+

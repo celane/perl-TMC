@@ -1,0 +1,131 @@
+#!/usr/bin/perl -w
+# 
+use TMC;
+use Getopt::Long qw(:config bundling auto_version);
+use strict;
+
+main();
+
+sub main {
+    my $help;
+    my $mfr = 'Tek*';
+    my $prod ='TDS*2024*';
+    my $sn = '*';
+    my $outfile;
+
+    GetOptions(
+	'help|h|?' => \$help,
+	'manufacture|m=s' => \$mfr,
+	'product|p=s' => \$prod,
+	'serial|s=s' => \$sn,
+	'out|o=s' => \$outfile,
+	);
+
+    if (defined($help)) {
+	print "USB Test and Measurement.. get device config\n";
+	print "   device is selected by product name, serial number,\n";
+	print "   otherwise if only one TMC device, it is used\n";
+	print "usage $0 [options] [>output]\n";
+	print "    -h   --help        this help\n";
+	print "    -oFL --out=FL      output file (or STDOUT)\n";
+	print "     these can use simple 'glob' style wildcards:\n";
+	print "    -mMM --manufacture=MM manufacturer name (def: Tek*)\n";
+	print "    -pNM --product=NM  device product name (def: TDS*2024*)\n";
+	print "    -sSN --serial=SN   device serial number (def: *)\n";
+	exit(0);
+    }
+    
+    if (defined($outfile)) {
+	open(OUT,">$outfile") || die("Unable to open $outfile for writing");
+    } else {
+	*OUT = *STDOUT;
+    }
+
+    my $t = new TMC(
+	MANUFACTURE=>$mfr,
+	PRODUCT=>$prod,
+	SERIAL=>$sn,
+	);
+
+    $t->Tx("SET?");
+    sleep(1);
+    
+    my $str = $t->Rx();
+    my (@lines) = SplitGPIB($str);
+    foreach my $s (@lines) {
+	print OUT "$s\n";
+    }
+    
+    exit(0);
+}
+
+sub SplitGPIB
+{
+    my $s = shift;
+
+    chomp($s);
+
+    $s =~ s/^\s*//;
+
+    my (@p);
+    
+    while (length($s) > 0) {
+	if ($s =~ /^([^\'\";]+;)/) {
+	    push(@p,$1);
+	    $s = substr($s,length($1));
+	} elsif ($s =~ /^[^\'\";]*$/) {
+	    push(@p,$s);
+	    last;
+	} else {
+	    my $j = 0;
+	    my $del = '';
+	    while ($j < length($s)) {
+		last if substr($s,$j,1) eq ';' && $del eq '';
+		if (substr($s,$j,1) eq '"') {
+		    if ($del eq '') {
+			$del = '"';
+		    } elsif ($del eq '"') {
+			if (substr($s,$j+1,1) eq '"') {
+			    $j++;
+			} else {
+			    $del = '';
+			}
+		    }
+		} elsif (substr($s,$j,1) eq "'") {
+		    if ($del eq '') {
+			$del = "'";
+		    } elsif ($del eq "'") {
+			if (substr($s,$j+1,1) eq "'") {
+			    $j++;
+			} else {
+			    $del = '';
+			}
+		    }
+		}
+		$j++;
+	    }
+	    $j++ if $j < length($s);
+	    push(@p,substr($s,0,$j));
+	    $s = substr($s,$j);
+	}
+    }
+    
+    my (@v);
+    my $k = -1;
+    my $lastsemi = 1;
+    foreach my $x (@p) {
+	if ($x =~ /^:/ && $lastsemi) {
+	    push(@v,$x);
+	    $v[$k] =~ s/;$// if $k >= 0;
+	    $k++;
+	} else {
+	    $v[$k] .= $x;
+	}
+	$lastsemi = ($x =~ /;$/);
+    }
+    
+    return (@v);
+}
+
+
+

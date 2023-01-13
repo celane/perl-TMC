@@ -1,0 +1,22 @@
+Changes
+lib/TMC.pm
+Makefile.PL
+MANIFEST			This list of files
+README.md
+dist/perl-TMC.spec
+t/00-load.t
+t/manifest.t
+t/pod.t
+programs/Get2024Config
+programs/Set2024Config
+programs/ScreenCap2024
+programs/Take2024Waveforms
+programs/TMCreset
+programs/Get2024Config.1
+programs/Set2024Config.1
+programs/ScreenCap2024.1
+programs/Take2024Waveforms.1
+programs/TMCreset.1
+
+META.yml                                 Module YAML meta-data (added by MakeMaker)
+META.json                                Module JSON meta-data (added by MakeMaker)

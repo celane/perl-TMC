@@ -1,0 +1,53 @@
+.\" This is a comment
+.\" Contact Chuck Lane lane@duphy4.physics.drexel.edu
+.TH Set2024Config 1  "USBTMC DAQ"
+.SH NAME
+Set2024Config \- send configuration to instrument
+.SH SYNOPSIS
+.B Set2024Config
+[OPTION]... [<INPUT]
+
+.SH DESCRIPTION
+While this program was written for the Tektronix 2024B oscilloscope
+with a USBTMC connection, the sending of commands to an instrument
+are quite generic, so can be used for other USBTMC
+instruments.
+.PP
+The device is (optionally) selected by manufacturer, product name,
+and serial number, defaulting to a Tektronix TDS2024B. These
+options use  simple shell-style 'glob' wildcards, so \"Tek*\" will
+match \"Tektronix\". 
+
+.SH OPTIONS
+.TP
+.B -h     --help
+show short usage message
+.TP
+.BI  "-i" "file" "    --in=" "file"
+output file. If not supplied, input comes from STDIN
+.TP
+.BI "-m" "MFR" "    --manufacter=" "MFR"
+manufacturer name
+.I MFR
+(Default: \"Tek*\")
+.TP
+.BI "-p" "PROD" "    --product=" "PROD"
+device product name
+.I PROD
+(Default: \"TDS*2024*\")
+.TP
+.BI "-s" "SN" "    --serial=" "SN"
+device serial number
+.I SN
+(Default: \"*\")
+.SH SEE ALSO
+TMC(3pm), Get2024Config(1)
+.SH BUGS
+There have been \"usbtmc\" driver timeouts when sending
+large configuration files, so this program attempts to
+break its input into separate usbtmc commands (via common
+GPIB-style parsing) for transmission.  The current Linux
+usbtmc driver has a hard-coded 5000ms timeout, and some
+instruments are a bit slow to process usbtmc commands. 
+.SH AUTHOR
+Chuck Lane (lane@duphy4.physics.drexel.edu)

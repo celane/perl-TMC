@@ -1,0 +1,9 @@
+Revision history for TMC
+0.06    12 Jan 2023 lane@dchooz.org
+        added filetest pragma to TMC.pm, so that ACLs can
+        be used for the /dev/usbtmc* devices.
+
+0.01    14 Jan 2015 lane@duphy4.physics.drexel.edu
+        First version, released on an unsuspecting world.
+	updated i/o from old usbtmc driver
+

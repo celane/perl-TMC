@@ -1,0 +1,34 @@
+.\" This is a comment
+.\" Contact Chuck Lane lane@duphy4.physics.drexel.edu
+.TH TMCreset 1  "USBTMC DAQ"
+.SH NAME
+TMCreset \- perform usb reset function for usbtmc devices
+.SH SYNOPSIS
+.B TMCreset
+
+.SH DESCRIPTION
+This program is used to reset usb ports used for USBTMC
+devices.
+.PP
+After a command/response timeout with a USBTMC device,
+it is commonly found that the device no longer responds.
+This program resets the underlying usb device, so that
+USBTMC devices will then function.
+.PP
+The program parses the output from the lsusb command to
+look for devices that use the TMC protocol. The ioctl
+RESET is then performed on
+.I all
+of these devices, via their interfaces at
+.B /dev/bus/usb/BBB/NNN
+where BBB is the bus number and DDD is the device number.
+.PP
+Please note that the /dev/bus/usb/BBB/NNN device has to be writable by
+the user running this program
+
+.SH SEE ALSO
+TMC(3pm) 
+.SH BUGS
+Copious, yet undiscovered. 
+.SH AUTHOR
+Chuck Lane (lane@duphy4.physics.drexel.edu)
