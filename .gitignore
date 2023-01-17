@@ -8,6 +8,7 @@
 *.bs
 *~
 *.rpm
+do_build_rpm
 
 # Devel::Cover
 cover_db/

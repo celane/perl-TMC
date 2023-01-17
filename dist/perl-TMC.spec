@@ -7,7 +7,7 @@
 
 Name:           perl-TMC
 Version:        0.06
-Release:        4%{?dist}
+Release:        5%{?dist}
 Summary:        TMC Perl module
 License:        GPL
 Group:          Development/Libraries
@@ -65,9 +65,9 @@ install programs/*.1 $RPM_BUILD_ROOT/%{_mandir}/man1/
 %{_bindir}/*
 
 %pre
-h2ph -d %{perl_vendorlib} -a linux/usb/tmc.h
-h2ph -d %{perl_vendorlib} -a linux/ioctl.h
-h2ph -d %{perl_vendorlib} -a linux/usbdevice_fs.h
+h2ph -a linux/usb/tmc.h
+h2ph -a linux/ioctl.h
+h2ph -a linux/usbdevice_fs.h
 
 %changelog
 * Thu Jan 12 2023 lane@dchooz.org 0.06-4
