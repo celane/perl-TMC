@@ -20,6 +20,7 @@ BuildRequires:  perl(ExtUtils::MakeMaker)
 BuildRequires:  perl(Test::More)
 Requires:       perl(:MODULE_COMPAT_%(eval "`%{__perl} -V:version`"; echo $version))
 Requires:       linux-usbtmc
+Requires:       perl-ph
 
 %description
 perl TMC module for USBTMC data aquisition, plus 

@@ -12,6 +12,7 @@ sub main {
     my $prod ='TDS*2024*';
     my $sn = '*';
     my $outfile;
+    my $debug = 0;
 
     GetOptions(
 	'help|h|?' => \$help,
@@ -19,6 +20,7 @@ sub main {
 	'product|p=s' => \$prod,
 	'serial|s=s' => \$sn,
 	'out|o=s' => \$outfile,
+        'debug|d+' => \$debug,
 	);
 
     if (defined($help)) {
@@ -32,6 +34,7 @@ sub main {
 	print "    -mMM --manufacture=MM manufacturer name (def: Tek*)\n";
 	print "    -pNM --product=NM  device product name (def: TDS*2024*)\n";
 	print "    -sSN --serial=SN   device serial number (def: *)\n";
+        print "    -d   --debug       increment debug level\n";
 	exit(0);
     }
     
@@ -45,6 +48,7 @@ sub main {
 	MANUFACTURE=>$mfr,
 	PRODUCT=>$prod,
 	SERIAL=>$sn,
+        DEBUG=>$debug,
 	);
 
     $t->Tx("SET?");
