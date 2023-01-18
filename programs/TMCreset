@@ -6,15 +6,22 @@ no strict qw(subs);
 use Fcntl qw(O_RDWR);
 use FileHandle;
 use Carp;
+use TMC::constants;
 
 # find the TMC devices on the system, and do a usb reset on them
 # clears usbtmc timeout hangs
 
-BEGIN {
-    require 'linux/ioctl.ph';
-    require 'linux/usbdevice_fs.ph';
-}
+#BEGIN {
+#    require 'linux/ioctl.ph';
+#    require 'linux/usbdevice_fs.ph';
+#}
 
+my $arg = shift;
+if ($arg =~ /^\-*h(elp)?/i) {
+    print "find the TMC devices on the system, and do a usb reset on them\n";
+    print "clears usbtmc timeout hangs\n";
+    exit 0;
+}
 
 
 my (@usbs);
@@ -46,7 +53,7 @@ foreach my $u (@usbs) {
 	next;
     }
    
-    my $iss = ioctl($io,&USBDEVFS_RESET,0);
+    my $iss = ioctl($io,USBDEVFS_RESET,0);
     if (!$iss) {
 	carp("error resetting $u iss=$iss $!");
 	$status = 1;

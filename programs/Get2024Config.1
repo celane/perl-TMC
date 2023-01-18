@@ -1,5 +1,5 @@
 .\" This is a comment
-.\" Contact Chuck Lane lane@duphy4.physics.drexel.edu
+.\" Contact Chuck Lane lane@dchooz.org
 .TH Get2024Config 1  "USBTMC DAQ"
 .SH NAME
 Get2024Config \- fetch configuration from instrument
@@ -28,6 +28,9 @@ match \"Tektronix\".
 .B -h     --help
 show short usage message
 .TP
+.B -d    --debug
+increment debug level
+.TP
 .BI  "-o" "file" "    --out=" "file"
 output file, if not supplied, output goes to stdout
 .TP
@@ -50,4 +53,4 @@ TMC(3pm), Set2024Config(1)
 .SH BUGS
 Copious, yet undiscovered. 
 .SH AUTHOR
-Chuck Lane (lane@duphy4.physics.drexel.edu)
+Chuck Lane (lane@dchooz.org)

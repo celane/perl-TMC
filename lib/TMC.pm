@@ -10,6 +10,7 @@ use filetest 'access'; # for acl permissions, like on usbtmc device
 use FileHandle;
 use Time::HiRes qw( usleep );
 use Carp;
+use TMC::constants;
 
 =head1 NAME
 
@@ -328,7 +329,7 @@ sub _connect
 #	open(X,"+<$dev") || croak("failed to open $dev for r/w");
 #TEKTRONIX,TDS 2024B,C031234,CF:91.1CT FV:v22.11
 	$iss = ioctl($io,
-		     &USBTMC_IOCTL_CLEAR,0);
+		     USBTMC_IOCTL_CLEAR,0);
 	croak("error clearing comm iss=$iss $!") unless $iss;
 
 
@@ -515,7 +516,7 @@ sub get_stb {
     $self->_connect() || return undef;
     
     my $stb = ' ';
-    my $iss = ioctl($self->{IO}, USBTMC488_IOCTL_READ_STB(), $stb);
+    my $iss = ioctl($self->{IO}, USBTMC488_IOCTL_READ_STB, $stb);
     if (!$iss) {
         carp("error doing stb $!");
         return 0;

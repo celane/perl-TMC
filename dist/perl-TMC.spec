@@ -65,9 +65,11 @@ install programs/*.1 $RPM_BUILD_ROOT/%{_mandir}/man1/
 %{_bindir}/*
 
 %pre
-h2ph -a linux/usb/tmc.h
-h2ph -a linux/ioctl.h
-h2ph -a linux/usbdevice_fs.h
+h2ph -a -h linux/usb/tmc.h
+h2ph -a -h linux/ioctl.h
+h2ph -a -h linux/usbdevice_fs.h
+whereinstalled=`perl -MConfig -e 'print $Config{installsitearch};'`
+chmod +arx -R $whereinstalled
 
 %changelog
 * Thu Jan 12 2023 lane@dchooz.org 0.06-4

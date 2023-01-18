@@ -93,6 +93,7 @@ sub main
         MANUFACTURE=>$mfr,
         PRODUCT=>$prod,
         SERIAL=>$sn,
+        DEBUG => $DEBUG,
 	);
     $TSTART = gettimeofday();
     print $OUT ">REM ID:$id\n" if defined($id);

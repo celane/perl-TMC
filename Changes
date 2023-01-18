@@ -1,4 +1,9 @@
 Revision history for TMC
+0.07    18 Jan 2023 lane@dchooz.org
+        switch to using ExtUtils::H2PM (instead of h2ph) because
+        recent linux headers cause problems. Also add "--debug" flags
+        for all the programs.
+        
 0.06    12 Jan 2023 lane@dchooz.org
         added filetest pragma to TMC.pm, so that ACLs can
         be used for the /dev/usbtmc* devices.
