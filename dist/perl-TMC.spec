@@ -6,8 +6,8 @@
 #
 
 Name:           perl-TMC
-Version:        0.06
-Release:        5%{?dist}
+Version:        0.07
+Release:        1%{?dist}
 Summary:        TMC Perl module
 License:        GPL
 Group:          Development/Libraries
