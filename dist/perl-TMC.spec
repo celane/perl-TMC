@@ -64,14 +64,10 @@ install programs/*.1 $RPM_BUILD_ROOT/%{_mandir}/man1/
 %{_mandir}/man1/*
 %{_bindir}/*
 
-%pre
-h2ph -a -h linux/usb/tmc.h
-h2ph -a -h linux/ioctl.h
-h2ph -a -h linux/usbdevice_fs.h
-whereinstalled=`perl -MConfig -e 'print $Config{installsitearch};'`
-chmod +arx -R $whereinstalled
-
 %changelog
+* Thu Jan 19 2023 lane@dchooz.org 0.07-1
+- change from h2ph script to ExtUtils::H2PM, misc edits.
+
 * Thu Jan 12 2023 lane@dchooz.org 0.06-4
 - move to github, use filetest pragma for device files with ACLs
 
