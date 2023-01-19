@@ -4,7 +4,6 @@ use warnings FATAL => 'all';
 use ExtUtils::MakeMaker;
 use Data::Dumper;
     
-my (@pms);
 
 WriteMakefile(
     NAME             => 'TMC',
@@ -15,7 +14,7 @@ WriteMakefile(
     PL_FILES         => {
         'lib/TMC/constants.pm.PL' => 'lib/TMC/constants.pm',
     },
-    PM => { map { ($_ => "\$(INST_LIB/$_") } @pms},
+#    PM => {},
     MIN_PERL_VERSION => 5.006,
     CONFIGURE_REQUIRES => {
         'ExtUtils::MakeMaker' => 0,
@@ -30,7 +29,7 @@ WriteMakefile(
         #'Foo::Bar::Module' => 5.0401,
     },
     dist  => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
-    clean => { FILES => join ' ', @pms },
+    clean => { },
 );
 
 # package MY;
