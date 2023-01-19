@@ -17,7 +17,7 @@ use TMC::constants;
 #}
 
 my $arg = shift;
-if ($arg =~ /^\-*h(elp)?/i) {
+if (defined($arg) && $arg =~ /^\-*h(elp)?/i) {
     print "find the TMC devices on the system, and do a usb reset on them\n";
     print "clears usbtmc timeout hangs\n";
     exit 0;

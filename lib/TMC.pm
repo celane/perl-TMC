@@ -170,23 +170,14 @@ write access.
 
 
 
-#BEGIN {
-    
-    # "sys/ioctl.ph" throws a warning about FORTIFY_SOURCE, but
-    # this alternate is (perhaps?) not present on all systems,
-    # so do a workaround
-    if ( !defined( eval('require "linux/ioctl.ph";') ) ) {
-        require "sys/ioctl.ph";
-    }
-    require "linux/usb/tmc.ph";
-
+BEGIN {    
     require Exporter;
     our @ISA = qw(Exporter);
     our @EXPORT_OK = qw(Tx Rx);
     our %EXPORT_TAGS = (
 	':all' => [ qw(Tx Rx) ]
 	);
-#}
+}
 
 
 
@@ -249,6 +240,16 @@ sub new {
     return $self;
 }
 
+sub _getfileval {
+    local *F;
+    my $filename = shift;
+    return undef unless -e $filename;
+    open(F,"<$filename") || return undef;
+    my $val = <F>;
+    $val =~ s/\s+$//;
+    return $val;
+}
+
 sub _connect 
 {
     my $self = shift;
@@ -256,8 +257,6 @@ sub _connect
 
     return 1 if $self->{CONNECTED};
 
-    $self->{DRIVER_TIMEOUT} = $DRIVER_TIMEOUT;
-    $self->{DRIVER_MAXBUF} = $DRIVER_MAXBUF;
     
     # check if usbtmc module is loaded...
     #     one-line header from driver, then one line/tmc device
@@ -266,18 +265,19 @@ sub _connect
     #
     if (-e '/sys/module' && -d '/sys/module' &&
         -d '/sys/module/usbtmc') {
-        if (-e '/sys/module/usbtmc/version') {
-            $self->{MODVERSION} = `cat /sys/module/usbtmc/version`;
-        }
-        if (-e '/sys/module/usbtmc/parameters/usb_timeout') {
-            $self->{DRIVER_TIMEOUT} =
-                `cat /sys/module/usbtmc/parameters/usb_timeout`;
-        }
-        if (-e '/sys/module/usbtmc/parameters/io_buffer_size') {
-            $self->{DRIVER_BUFSIZE} =
-                `cat /sys/module/usbtmc/parameters/io_buffer_size`;
-        }
+        $self->{MODVERSION} = _getfileval('/sys/module/usbtmc/version');
+        $self->{DRIVER_TIMEOUT} = _getfileval('/sys/module/usbtmc/parameters/usb_timeout');
+        $self->{DRIVER_BUFSIZE} = _getfileval('/sys/module/usbtmc/parameters/io_buffer_size');
+
+        $self->{DRIVER_TIMEOUT} = $DRIVER_TIMEOUT
+            unless defined $self->{DRIVER_TIMEOUT};
+        $self->{DRIVER_MAXBUF} = $DRIVER_MAXBUF
+            unless defined $self->{DRIVER_MAXBUF};
+        
     } else {
+        $self->{DRIVER_TIMEOUT} = $DRIVER_TIMEOUT;
+        $self->{DRIVER_MAXBUF} = $DRIVER_MAXBUF;
+        
         open(X,"/sbin/lsmod|") || croak("unable to lsmod");
 
         $_ = <X>;
