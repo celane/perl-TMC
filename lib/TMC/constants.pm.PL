@@ -17,11 +17,18 @@ constant "USBTMC488_IOCTL_READ_STB";
 constant "USBDEVFS_RESET";
 write_output $ARGV[0];
 
+
 open(P,"<$ARGV[0]") || die "unable to open $ARGV[0] for reading";
-my @lines = (<P>);
+while (<P>) {
+    if (/Exporter/) { # ExtUtils::H2PM got fixed!
+        close P;
+        exit 0;
+    }
+    push(@lines,$_);
+}
 close(P);
 
-open(P,">ARGV[0]") || die "unable to open $ARGV[0] for writing";
+open(P,">$ARGV[0]") || die "unable to open $ARGV[0] for writing";
 foreach (@lines) {
     last if /^\s*1;\s*/;
     print P $_;
